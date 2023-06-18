@@ -23,16 +23,16 @@ print("I am process %s, running on %s: starting (%s)" % (
 
 # I/O args
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--data-train", type=str, default='', help="training data json")
-parser.add_argument("--data-val", type=str, default='', help="validation data json")
-parser.add_argument("--data-eval", type=str, default=None, help="evaluation data json")
-parser.add_argument("--label-csv", type=str, default=os.path.join(basepath, 'utilities/class_labels_indices_coarse.csv'), help="csv with class labels")
+parser.add_argument("--data-train", type=str, default='/home/mmatan/Project/psla/egs/fsd50k/datafiles/fsd50k_tr_full.json', help="training data json")
+parser.add_argument("--data-val", type=str, default='/home/mmatan/Project/psla/egs/fsd50k/datafiles/fsd50k_val_full.json', help="validation data json")
+parser.add_argument("--data-eval", type=str, default='/home/mmatan/Project/psla/egs/fsd50k/datafiles/fsd50k_eval_full.json', help="evaluation data json")
+parser.add_argument("--label-csv", type=str, default=os.path.join(basepath, 'psla/egs/fsd50k/class_labels_indices.csv'), help="csv with class labels")
 parser.add_argument("--exp-dir", type=str, default="", help="directory to dump experiments")
 
 # training and optimization args
 parser.add_argument("--optim", type=str, default="adam", help="training optimizer", choices=["sgd", "adam"])
 parser.add_argument('-b', '--batch-size', default=60, type=int, metavar='N', help='mini-batch size (default: 100)')
-parser.add_argument('-w', '--num-workers', default=8, type=int, metavar='NW', help='# of workers for dataloading (default: 8)')
+parser.add_argument('-w', '--num-workers', default=0, type=int, metavar='NW', help='# of workers for dataloading (default: 8)')
 parser.add_argument('--lr', '--learning-rate', default=0.001, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--lr-decay', default=40, type=int, metavar='LRDECAY', help='Divide the learning rate by 10 every lr_decay epochs')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
@@ -41,12 +41,12 @@ parser.add_argument("--n-epochs", type=int, default=1, help="number of maximum t
 parser.add_argument("--n-print-steps", type=int, default=1, help="number of steps to print statistics")
 
 # model args
-parser.add_argument("--model", type=str, default="efficientnet", help="audio model architecture", choices=["efficientnet", "resnet", "mbnet"])
+parser.add_argument("--model", type=str, default="transformer", help="audio model architecture", choices=["efficientnet", "resnet", "mbnet", "transformer"])
 parser.add_argument("--dataset", type=str, default="audioset", help="the dataset used", choices=["audioset", "esc50", "speechcommands"])
 
 parser.add_argument("--dataset_mean", type=float, default=-4.6476, help="the dataset mean, used for input normalization")
 parser.add_argument("--dataset_std", type=float, default=4.5699, help="the dataset std, used for input normalization")
-parser.add_argument("--target_length", type=int, default=1056, help="the input length in frames")
+parser.add_argument("--target_length", type=int, default=3000, help="the input length in frames")
 parser.add_argument("--noise", help='if use balance sampling', type=ast.literal_eval)
 parser.add_argument("--metrics", type=str, default="mAP", help="the main evaluation metrics", choices=["mAP", "acc"])
 parser.add_argument("--warmup", help='if use balance sampling', type=ast.literal_eval)
@@ -57,7 +57,7 @@ parser.add_argument("--wa", help='if do weight averaging', type=ast.literal_eval
 parser.add_argument("--wa_start", type=int, default=16, help="which epoch to start weight averaging")
 parser.add_argument("--wa_end", type=int, default=30, help="which epoch to end weight averaging")
 
-parser.add_argument("--n_class", type=int, default=527, help="number of classes")
+parser.add_argument("--n_class", type=int, default=200, help="number of classes")
 parser.add_argument('--save_model', help='save the model or not', type=ast.literal_eval)
 parser.add_argument("--eff_b", type=int, default=0, help="which efficientnet to use, the larger number, the more complex")
 parser.add_argument('--esc', help='If doing an ESC exp, which will have some different behabvior', type=ast.literal_eval, default='False')
@@ -108,6 +108,8 @@ elif args.model == 'resnet':
     audio_model = models.ResNetAttention(label_dim=args.n_class, pretrain=args.impretrain)
 elif args.model == 'mbnet':
     audio_model = models.MBNet(label_dim=args.n_class, pretrain=args.effpretrain)
+elif args.model == 'transformer':
+    audio_model = models.BaseTransformer(label_number=args.n_class)
 
 # if you want to use a pretrained model for fine-tuning, uncomment here.
 # if not isinstance(audio_model, nn.DataParallel):

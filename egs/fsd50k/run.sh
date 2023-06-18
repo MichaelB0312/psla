@@ -15,7 +15,7 @@ source ../../venv-psla/bin/activate
 export TORCH_HOME=./
 
 att_head=4
-model=efficientnet
+model=transformer
 psla=True
 eff_b=2
 batch_size=24
@@ -36,7 +36,7 @@ else
 fi
 
 lr=5e-4
-p=mean
+p=25
 if [ $p == none ]
 then
   trpath=./datafiles/fsd50k_tr_full.json
@@ -53,7 +53,7 @@ exp_dir=./exp/demo-${model}-${eff_b}-${lr}-fsd50k-impretrain-${impretrain}-fm${f
 mkdir -p $exp_dir
 
 CUDA_CACHE_DISABLE=1 python ../../src/run.py --data-train $trpath --data-val ./datafiles/fsd50k_val_full.json --data-eval ./datafiles/fsd50k_eval_full.json \
---exp-dir $exp_dir --n-print-steps 1000 --save_model True --num-workers 32 --label-csv ./class_labels_indices.csv \
+--exp-dir $exp_dir --n-print-steps 1000 --save_model True --num-workers 0 --label-csv ./class_labels_indices.csv \
 --n_class 200 --n-epochs ${epoch} --batch-size ${batch_size} --lr $lr \
 --model ${model} --eff_b $eff_b --impretrain ${impretrain} --att_head ${att_head} \
 --freqm $freqm --timem $timem --mixup ${mixup} --bal ${bal} --lr_patience 2 \

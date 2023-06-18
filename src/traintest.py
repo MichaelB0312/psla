@@ -96,6 +96,7 @@ def train(audio_model, train_loader, test_loader, args):
                 print('warm-up learning rate is {:f}'.format(optimizer.param_groups[0]['lr']))
 
             audio_output = audio_model(audio_input)
+            audio_output = torch.squeeze(audio_output, dim=1)
             if isinstance(loss_fn, torch.nn.CrossEntropyLoss):
                 loss = loss_fn(audio_output, torch.argmax(labels.long(), axis=1))
             else:
@@ -229,23 +230,24 @@ def train(audio_model, train_loader, test_loader, args):
         # print("d_prime: {:.6f}".format(d_prime(mAUC)))
         np.savetxt(exp_dir + '/wa_result.csv', wa_result)
 
-def validate(audio_model, val_loader, args, epoch, eval_target=False):  
+def validate(audio_model, val_loader, args, epoch, eval_target=False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_time = AverageMeter()
-    if not isinstance(audio_model, nn.DataParallel):    
-        audio_model = nn.DataParallel(audio_model)  
-    audio_model = audio_model.to(device)    
-    # switch to evaluate mode   
-    audio_model.eval()  
-    end = time.time()   
-    A_predictions = []  
-    A_targets = []  
-    A_loss = [] 
-    with torch.no_grad():   
-        for i, (audio_input, labels) in enumerate(val_loader):  
-            audio_input = audio_input.to(device)    
-            # compute output    
-            audio_output = audio_model(audio_input) 
+    if not isinstance(audio_model, nn.DataParallel):
+        audio_model = nn.DataParallel(audio_model)
+    audio_model = audio_model.to(device)
+    # switch to evaluate mode
+    audio_model.eval()
+    end = time.time()
+    A_predictions = []
+    A_targets = []
+    A_loss = []
+    with torch.no_grad():
+        for i, (audio_input, labels) in enumerate(val_loader):
+            audio_input = audio_input.to(device)
+            # compute output
+            audio_output = audio_model(audio_input)
+            audio_output = torch.squeeze(audio_output, dim=1)
             predictions = audio_output.to('cpu').detach()   
             A_predictions.append(predictions)   
             A_targets.append(labels)    
