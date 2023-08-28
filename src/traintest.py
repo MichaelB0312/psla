@@ -102,6 +102,8 @@ def train(audio_model, train_loader, test_loader, args):
             else:
                 epsilon = 1e-7
                 audio_output = torch.clamp(audio_output, epsilon, 1. - epsilon)
+                #print(audio_output.size())
+                #print(labels.size())
                 loss = loss_fn(audio_output, labels)
 
             # optimization if amp is not used
