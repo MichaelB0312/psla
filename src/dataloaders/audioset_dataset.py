@@ -116,6 +116,7 @@ class AudiosetDataset(Dataset):
             mix_waveform = mix_lambda * waveform1 + (1 - mix_lambda) * waveform2
             waveform = mix_waveform - mix_waveform.mean()
 
+        #print("before MEL:", waveform.size())
         fbank = torchaudio.compliance.kaldi.fbank(waveform, htk_compat=True, sample_frequency=sr, use_energy=False,
                                                   window_type='hanning', num_mel_bins=self.melbins, dither=0.0, frame_shift=10)
 
