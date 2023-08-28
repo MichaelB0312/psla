@@ -115,11 +115,11 @@ class MeanPooling(nn.Module):
         return x, []
 
 class MHeadAttention(nn.Module):
-    def __init__(self, n_in, n_out, att_activation, cla_activation, head_num=4):
+    def __init__(self, n_in, n_out, att_activation, cla_activation, head_num=4, final_layer=True):
         super(MHeadAttention, self).__init__()
 
         self.head_num = head_num
-
+        self.final_layer = final_layer
         self.att_activation = att_activation
         self.cla_activation = cla_activation
 
@@ -160,8 +160,14 @@ class MHeadAttention(nn.Module):
             att = torch.clamp(att, epsilon, 1. - epsilon)
 
             norm_att = att / torch.sum(att, dim=2)[:, :, None]
-            x_out.append(torch.sum(norm_att * cla, dim=2) * self.head_weight[i])
+            product = norm_att * cla
+            if(self.final_layer==False):
+                x_out.append(product * self.head_weight[i])
+            else:
+                x_out.append(torch.sum(norm_att * cla, dim=2) * self.head_weight[i])
 
         x = (torch.stack(x_out, dim=0)).sum(dim=0)
+        if(self.final_layer==False):
+            x = x.unsqueeze(-1)
 
         return x, []
