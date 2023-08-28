@@ -15,10 +15,10 @@ source ../../venv-psla/bin/activate
 export TORCH_HOME=./
 
 att_head=4
-model=transformer
+model=efficientnet
 psla=True
 eff_b=2
-batch_size=24
+batch_size=16
 
 if [ $psla == True ]
 then
@@ -36,7 +36,7 @@ else
 fi
 
 lr=5e-4
-p=25
+p=mean
 if [ $p == none ]
 then
   trpath=./datafiles/fsd50k_tr_full.json
