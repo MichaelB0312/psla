@@ -2,12 +2,9 @@
 # Author: David Harwath
 import argparse
 import os
-import pickle
 import sys
-from collections import OrderedDict
 import time
-import torch
-import shutil
+
 basepath = os.path.dirname(os.path.dirname(sys.path[0]))
 sys.path.append(basepath)
 import dataloaders
@@ -18,14 +15,18 @@ import ast
 from torch.utils.data import WeightedRandomSampler
 import numpy as np
 
+import os
+
+print("Current working directory:", os.getcwd())
+
 print("I am process %s, running on %s: starting (%s)" % (
         os.getpid(), os.uname()[1], time.asctime()))
 
 # I/O args
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--data-train", type=str, default='/home/mmatan/Project/psla/egs/fsd50k/datafiles/fsd50k_tr_full.json', help="training data json")
-parser.add_argument("--data-val", type=str, default='/home/mmatan/Project/psla/egs/fsd50k/datafiles/fsd50k_val_full.json', help="validation data json")
-parser.add_argument("--data-eval", type=str, default='/home/mmatan/Project/psla/egs/fsd50k/datafiles/fsd50k_eval_full.json', help="evaluation data json")
+parser.add_argument("--data-train", type=str, default='/home/michaelberko/mic_psla/psla/egs/fsd50k/datafiles/fsd50k_tr_full.json', help="training data json")
+parser.add_argument("--data-val", type=str, default='/home/michaelberko/mic_psla/psla/egs/fsd50k/datafiles/fsd50k_val_full.json', help="validation data json")
+parser.add_argument("--data-eval", type=str, default='/home/michaelberko/mic_psla/psla/egs/fsd50k/datafiles/fsd50k_eval_full.json', help="evaluation data json")
 parser.add_argument("--label-csv", type=str, default=os.path.join(basepath, 'psla/egs/fsd50k/class_labels_indices.csv'), help="csv with class labels")
 parser.add_argument("--exp-dir", type=str, default="", help="directory to dump experiments")
 
@@ -41,12 +42,13 @@ parser.add_argument("--n-epochs", type=int, default=1, help="number of maximum t
 parser.add_argument("--n-print-steps", type=int, default=1, help="number of steps to print statistics")
 
 # model args
-parser.add_argument("--model", type=str, default="transformer", help="audio model architecture", choices=["efficientnet", "resnet", "mbnet", "transformer"])
+parser.add_argument("--model", type=str, default="efficientnetConc", help="audio model architecture", choices=["efficientnet", "resnet", "mbnet", "transformer","TransformerEffNet",
+                                                                                                          "efficientnetConc"])
 parser.add_argument("--dataset", type=str, default="audioset", help="the dataset used", choices=["audioset", "esc50", "speechcommands"])
 
 parser.add_argument("--dataset_mean", type=float, default=-4.6476, help="the dataset mean, used for input normalization")
 parser.add_argument("--dataset_std", type=float, default=4.5699, help="the dataset std, used for input normalization")
-parser.add_argument("--target_length", type=int, default=3000, help="the input length in frames")
+parser.add_argument("--target_length", type=int, default=1000, help="the input length in frames")
 parser.add_argument("--noise", help='if use balance sampling', type=ast.literal_eval)
 parser.add_argument("--metrics", type=str, default="mAP", help="the main evaluation metrics", choices=["mAP", "acc"])
 parser.add_argument("--warmup", help='if use balance sampling', type=ast.literal_eval)
@@ -110,6 +112,10 @@ elif args.model == 'mbnet':
     audio_model = models.MBNet(label_dim=args.n_class, pretrain=args.effpretrain)
 elif args.model == 'transformer':
     audio_model = models.BaseTransformer(label_number=args.n_class)
+elif args.model == 'TransformerEffNet':
+    audio_model = models.TransformerEffNet(label_number=args.n_class, impretrain=args.impretrain, b=args.eff_b)
+elif args.model == 'efficientnetConc':
+    audio_model = models.EffNetAttentionConc(label_dim=args.n_class, b=args.eff_b, pretrain=args.impretrain, head_num=args.att_head)
 
 # if you want to use a pretrained model for fine-tuning, uncomment here.
 # if not isinstance(audio_model, nn.DataParallel):
